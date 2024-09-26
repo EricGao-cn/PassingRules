@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交通信号灯检测</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        #preview {
+            max-width: 300px;
+            max-height: 300px;
+        }
+        .output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>交通信号灯检测</h1>
+        <input type="file" id="imageUpload" accept="image/*">
+        <div class="output">
+            <img id="preview" src="#" alt="上传的图片预览" style="display:none;">
+            <h2>推理结果</h2>
+            <img id="outputImage" src="#" alt="模型推理结果" style="display:none;">
+        </div>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const preview = document.getElementById('preview');
+        const outputImage = document.getElementById('outputImage');
+
+        // 当用户上传图片时，预览图片并将其发送给后端进行推理
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 预览图片
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+
+                    // 上传图片并调用后端接口进行推理
+                    uploadImage(file).then(response => {
+                        // 显示模型推理的输出图片
+                        outputImage.src = response.outputImageUrl;
+                        outputImage.style.display = 'block';
+                    }).catch(err => {
+                        console.error('图片上传失败:', err);
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 将图片发送到 Flask 后端并获取推理结果
+        function uploadImage(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                // 发送 POST 请求到 /upload
+                fetch('http://127.0.0.1:5000/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.blob())
+                  .then(blob => {
+                      // 将返回的推理结果图像转换为 URL 并返回
+                      const url = URL.createObjectURL(blob);
+                      resolve({ outputImageUrl: url });
+                  })
+                  .catch(error => reject(error));
+            });
+        }
+    </script>
+</body>
+</html>
