@@ -79,3 +79,15 @@ strategy: "conservative"    # 通行规则识别策略，“conservative”（�
 ```bash
 pip install ultralytics
 ```
+
+## 系统搭建
+1. 安装 Flask, pillow, flask-cors 来写前后端
+
+```bash
+pip install Flask, pillow, flask-cors
+```
+
+2. 在终端输入`python app.py` 运行 app.py，启动服务器
+3. 新建另一个终端，输入`python -m http.server 8000` 运行 http.server
+4. 进入浏览器 127.0.0.1:8000 网址，打开 web.html 文件
+4. 上传图片，进行推理，输出结果
