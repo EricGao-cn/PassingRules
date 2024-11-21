@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交通信号灯检测</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            text-align: center;
+            background: #fff; /* 背景色 */
+            padding: 20px;
+            border-radius: 12px; /* 圆角边框 */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* 外层阴影 */
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+        .column {
+            width: 48%;
+            border: 1px solid #ddd; /* 原边框 */
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f9f9f9, #eaeaea); /* 渐变背景 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+            border-radius: 8px; /* 圆角边框 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* 鼠标悬停效果 */
+        }
+        .column:hover {
+            transform: translateY(-5px); /* 鼠标悬停时微微上移 */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 鼠标悬停时阴影加深 */
+        }
+        .column img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            display: none;
+            margin-bottom: 10px; /* 确保图片和按钮之间有间距 */
+        }
+        .file-upload-container {
+            display: flex; /* 使用 flex 布局 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            width: 100%; /* 确保容器宽度占满 */
+            margin-top: 10px; /* 增加顶部间距，避免贴近图片 */
+        }
+        input[type="file"] {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Turnsafe -- AI驱动的交通信号通行状态智能检测系统</h1>
+        <div class="row">
+            <div class="column">
+                <h2>选择你要检测的红绿灯图片：</h2>
+                <img id="preview" src="#" alt="上传的图片预览">
+                <div class="file-upload-container">
+                    <input type="file" id="imageUpload" accept="image/*">
+                </div>
+            </div>
+            <div class="column">
+                <h2>检测结果：</h2>
+                <img id="outputImage" src="#" alt="模型推理结果">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const preview = document.getElementById('preview');
+        const outputImage = document.getElementById('outputImage');
+
+        // 当用户上传图片时，预览图片并将其发送给后端进行推理
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // 预览图片
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+
+                    // 上传图片并调用后端接口进行推理
+                    uploadImage(file).then(response => {
+                        // 显示模型推理的输出图片
+                        outputImage.src = response.outputImageUrl;
+                        outputImage.style.display = 'block';
+                    }).catch(err => {
+                        console.error('图片上传失败:', err);
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 将图片发送到 Flask 后端并获取推理结果
+        function uploadImage(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                // 发送 POST 请求到 /upload
+                fetch('http://127.0.0.1:5000/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.blob())
+                  .then(blob => {
+                      // 将返回的推理结果图像转换为 URL 并返回
+                      const url = URL.createObjectURL(blob);
+                      resolve({ outputImageUrl: url });
+                  })
+                  .catch(error => reject(error));
+            });
+        }
+    </script>
+</body>
+</html>
